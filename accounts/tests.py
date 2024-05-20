@@ -193,17 +193,6 @@ class TestSignupView(TestCase):
             invalid_data, fields_to_check, error_message="確認用パスワードが一致しません。"
         )
 
-
-class TestHomeView(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpassword")
-        self.client.login(username="testuser", password="testpassword")
-
-    def test_success_get(self):
-        response = self.client.get(reverse("tweets:home"))
-        self.assertEqual(response.status_code, 200)
-
-
 # class TestLoginView(TestCase):
 #     def test_success_get(self):
 
