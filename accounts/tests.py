@@ -192,7 +192,8 @@ class TestSignupView(TestCase):
         self.assert_form_errors_on_signup(
             invalid_data, fields_to_check, error_message="確認用パスワードが一致しません。"
         )
-        
+
+
 # class TestLoginView(TestCase):
 #     def test_success_get(self):
 
