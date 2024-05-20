@@ -1,7 +1,8 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from mysite.settings import LOGIN_REDIRECT_URL
 from django.views.generic import CreateView, TemplateView
+
+from mysite.settings import LOGIN_REDIRECT_URL
 
 from .forms import SignupForm
 

@@ -14,6 +14,7 @@ class TestHomeView(TestCase):
         response = self.client.get(reverse("tweets:home"))
         self.assertEqual(response.status_code, 200)
 
+
 # class TestTweetCreateView(TestCase):
 #     def test_success_get(self):
 
