@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Sign Up{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Homeです</h1>
+<h1>Home</h1>
+<a href="{% url 'accounts:user_profile' user.username %}">プロフィール</a>
+<a href="{% url 'accounts:logout' %}">ログアウト</a>
 {% endblock %}
