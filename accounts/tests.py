@@ -199,12 +199,8 @@ class TestSignupView(TestCase):
 class TestLoginView(TestCase):
 
     def setUp(self):
-        self.url = reverse('accounts:login')
-        self.user = User.objects.create_user(
-            username="testuser",
-            email="test@test.com",
-            password="testpassword"
-        )
+        self.url = reverse("accounts:login")
+        self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpassword")
 
     def test_success_get(self):
         response = self.client.get(self.url)
@@ -238,7 +234,10 @@ class TestLoginView(TestCase):
         form = response.context["form"]
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("正しいユーザー名とパスワードを入力してください。どちらのフィールドも大文字と小文字は区別されます。", form.errors["__all__"])
+        self.assertIn(
+            "正しいユーザー名とパスワードを入力してください。どちらのフィールドも大文字と小文字は区別されます。",
+            form.errors["__all__"],
+        )
         self.assertNotIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_password(self):
@@ -258,7 +257,7 @@ class TestLoginView(TestCase):
 class TestLogoutView(TestCase):
 
     def setUp(self):
-        self.url = reverse('accounts:logout')
+        self.url = reverse("accounts:logout")
 
     def test_success_post(self):
         response = self.client.post(self.url)
