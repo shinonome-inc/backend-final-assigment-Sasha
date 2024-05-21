@@ -2,6 +2,8 @@ from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from mysite.settings import LOGIN_REDIRECT_URL, LOGOUT_REDIRECT_URL
+
 User = get_user_model()
 
 
@@ -25,10 +27,10 @@ class TestSignupView(TestCase):
 
         response = self.client.post(self.url, valid_data)  # 新規ユーザー登録のPOSTリクエストをシミュレート
 
-        # 確認1: tweets:homeにリダイレクトするか
+        # 確認1: LOGIN_REDIRECT_URLにリダイレクトしているか
         self.assertRedirects(
             response,
-            expected_url=reverse("tweets:home"),
+            expected_url=reverse(LOGIN_REDIRECT_URL),
             status_code=302,
             target_status_code=200,
         )
@@ -194,18 +196,80 @@ class TestSignupView(TestCase):
         )
 
 
-# class TestLoginView(TestCase):
-#     def test_success_get(self):
+class TestLoginView(TestCase):
 
-#     def test_success_post(self):
+    def setUp(self):
+        self.url = reverse('accounts:login')
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="test@test.com",
+            password="testpassword"
+        )
 
-#     def test_failure_post_with_not_exists_user(self):
+    def test_success_get(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
 
-#     def test_failure_post_with_empty_password(self):
+    def test_success_post(self):
+
+        valid_data = {
+            "username": "testuser",
+            "password": "testpassword",
+        }
+
+        response = self.client.post(self.url, valid_data)
+        # 確認1: LOGIN_REDIRECT_URLにリダイレクトされるか
+        self.assertRedirects(
+            response,
+            expected_url=reverse(LOGIN_REDIRECT_URL),
+            status_code=302,
+            target_status_code=200,
+        )
+        # 確認2: ログイン状態になっているか
+        self.assertIn(SESSION_KEY, self.client.session)
+
+    def test_failure_post_with_not_exists_user(self):
+        invalid_data = {
+            "username": "nonexistentuser",
+            "password": "testpassword",
+        }
+
+        response = self.client.post(self.url, invalid_data)
+        form = response.context["form"]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("正しいユーザー名とパスワードを入力してください。どちらのフィールドも大文字と小文字は区別されます。", form.errors["__all__"])
+        self.assertNotIn(SESSION_KEY, self.client.session)
+
+    def test_failure_post_with_empty_password(self):
+        invalid_data = {
+            "username": "testuser",
+            "password": "",
+        }
+
+        response = self.client.post(self.url, invalid_data)
+        form = response.context["form"]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("このフィールドは必須です。", form.errors["password"])
+        self.assertNotIn(SESSION_KEY, self.client.session)
 
 
-# class TestLogoutView(TestCase):
-#     def test_success_post(self):
+class TestLogoutView(TestCase):
+
+    def setUp(self):
+        self.url = reverse('accounts:logout')
+
+    def test_success_post(self):
+        response = self.client.post(self.url)
+
+        self.assertRedirects(
+            response,
+            expected_url=reverse(LOGOUT_REDIRECT_URL),
+            status_code=302,
+            target_status_code=200,
+        )
+        self.assertNotIn(SESSION_KEY, self.client.session)
 
 
 # class TestUserProfileView(TestCase):
