@@ -11,14 +11,17 @@ class TestSignupView(TestCase):
         self.url = reverse("accounts:signup")
 
     # 異常系テストでチェックしたい部分を関数にしてまとめる
-    def assert_form_errors_on_signup(self, data, fields_to_check, error_message):
+    def get_response_and_assert_form_errors_if_invalid_data(self, data, fields_and_error_messages):
+
+        # fields_and_errorg_messages = {field: error_message, ...}
+
         response = self.client.post(self.url, data)
         form = response.context["form"]
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(form.is_valid())
 
-        for field in fields_to_check:
+        for field, error_message in fields_and_error_messages.items():
             self.assertIn(error_message, form.errors[field])
 
     def test_success_get(self):
@@ -57,10 +60,15 @@ class TestSignupView(TestCase):
             "password2": "",
         }
 
-        fields_to_check = ["username", "email", "password1", "password2"]
+        fields_and_error_messages = {
+            "username": "このフィールドは必須です。",
+            "email": "このフィールドは必須です。",
+            "password1": "このフィールドは必須です。",
+            "password2": "このフィールドは必須です。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(invalid_data, fields_to_check, error_message="このフィールドは必須です。")
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_empty_username(self):
         invalid_data = {
@@ -70,10 +78,12 @@ class TestSignupView(TestCase):
             "password2": "testpassword",
         }
 
-        fields_to_check = ["username"]
+        fields_and_error_messages = {
+            "username": "このフィールドは必須です。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(invalid_data, fields_to_check, error_message="このフィールドは必須です。")
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_empty_email(self):
         invalid_data = {
@@ -83,10 +93,12 @@ class TestSignupView(TestCase):
             "password2": "testpassword",
         }
 
-        fields_to_check = ["email"]
+        fields_and_error_messages = {
+            "email": "このフィールドは必須です。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(invalid_data, fields_to_check, error_message="このフィールドは必須です。")
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_empty_password(self):
         invalid_data = {
@@ -96,10 +108,13 @@ class TestSignupView(TestCase):
             "password2": "",
         }
 
-        fields_to_check = ["password1", "password2"]
+        fields_and_error_messages = {
+            "password1": "このフィールドは必須です。",
+            "password2": "このフィールドは必須です。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(invalid_data, fields_to_check, error_message="このフィールドは必須です。")
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_duplicated_user(self):
         # 既存のユーザーを作成する
@@ -116,10 +131,12 @@ class TestSignupView(TestCase):
             "password2": "testpassword",
         }
 
-        fields_to_check = ["username"]
+        fields_and_error_messages = {
+            "username": "同じユーザー名が既に登録済みです。",
+        }
 
-        self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(invalid_data, fields_to_check, error_message="同じユーザー名が既に登録済みです。")
+        self.assertTrue(User.objects.filter(username=invalid_data["username"]).exists())
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_invalid_email(self):
         invalid_data = {
@@ -129,12 +146,12 @@ class TestSignupView(TestCase):
             "password2": "testpassword",
         }
 
-        fields_to_check = ["email"]
+        fields_and_error_messages = {
+            "email": "有効なメールアドレスを入力してください。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(
-            invalid_data, fields_to_check, error_message="有効なメールアドレスを入力してください。"
-        )
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_too_short_password(self):
         invalid_data = {
@@ -144,12 +161,12 @@ class TestSignupView(TestCase):
             "password2": "short",
         }
 
-        fields_to_check = ["password2"]
+        fields_and_error_messages = {
+            "password2": "このパスワードは短すぎます。最低 8 文字以上必要です。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(
-            invalid_data, fields_to_check, error_message="このパスワードは短すぎます。最低 8 文字以上必要です。"
-        )
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_password_similar_to_username(self):
         invalid_data = {
@@ -159,12 +176,12 @@ class TestSignupView(TestCase):
             "password2": "passwordsimilar",
         }
 
-        fields_to_check = ["password2"]  # password1だとエラーが出る
+        fields_and_error_messages = {
+            "password2": "このパスワードは ユーザー名 と似すぎています。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(
-            invalid_data, fields_to_check, error_message="このパスワードは ユーザー名 と似すぎています。"
-        )
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_only_numbers_password(self):
         invalid_data = {
@@ -174,12 +191,12 @@ class TestSignupView(TestCase):
             "password2": "8754321",
         }
 
-        fields_to_check = ["password2"]
+        fields_and_error_messages = {
+            "password2": "このパスワードは数字しか使われていません。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(
-            invalid_data, fields_to_check, error_message="このパスワードは数字しか使われていません。"
-        )
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_mismatch_password(self):
         invalid_data = {
@@ -189,12 +206,12 @@ class TestSignupView(TestCase):
             "password2": "passwordtest",
         }
 
-        fields_to_check = ["password2"]
+        fields_and_error_messages = {
+            "password2": "確認用パスワードが一致しません。",
+        }
 
         self.assertFalse(User.objects.filter(username=invalid_data["username"]).exists())
-        self.assert_form_errors_on_signup(
-            invalid_data, fields_to_check, error_message="確認用パスワードが一致しません。"
-        )
+        self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
 
 # class TestLoginView(TestCase):
