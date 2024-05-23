@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
 
-from mysite.settings import LOGIN_REDIRECT_URL
+from django.conf import settings
 
 from .forms import SignupForm
 
@@ -11,7 +11,7 @@ from .forms import SignupForm
 class SignupView(CreateView):
     form_class = SignupForm
     template_name = "accounts/signup.html"
-    success_url = reverse_lazy(LOGIN_REDIRECT_URL)
+    success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)
 
     def form_valid(self, form):
         response = super().form_valid(form)  # 既に作成したユーザーデータを上書きするため、オーバーライドする
