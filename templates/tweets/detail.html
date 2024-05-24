@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Tweet Detail{% endblock %}
+
+{% block content %}
+    <article>
+        <div>投稿者: {{ object.author }}</div>
+        <div>日時: {{ object.created_at }}</div>
+        <div>{{ object.content }}</div>
+    </article>
+{% endblock %}
