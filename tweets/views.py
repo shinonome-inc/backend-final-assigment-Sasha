@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from .models import Tweet
 
@@ -36,3 +36,9 @@ class TweetCreateView(LoginRequiredMixin, CreateView):
 class TweetDetailView(DetailView):
     model = Tweet
     template_name = "tweets/detail.html"
+
+
+class TweetDeleteView(LoginRequiredMixin, DeleteView):
+    model = Tweet
+    template_name = "tweets/delete.html"
+    success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)

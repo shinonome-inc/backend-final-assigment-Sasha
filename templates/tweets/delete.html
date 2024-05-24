@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Tweet{% endblock %}
+
+{% block content %}
+<form method="post">{% csrf_token %}
+    <a>本当に削除しますか？</a>
+    {{ form }}
+    <input type="submit" value="確定">
+</form>
+{% endblock %}

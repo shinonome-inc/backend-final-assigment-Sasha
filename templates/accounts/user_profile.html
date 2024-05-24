@@ -9,6 +9,7 @@
         <h3>{{ tweet.author }}</h3>
         <div><p>{{ tweet.content }}</p></div>
         <div><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></div>
+        <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
     </div>
 {% endfor %}
 {% endblock %}

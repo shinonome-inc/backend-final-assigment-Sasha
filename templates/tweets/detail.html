@@ -7,5 +7,6 @@
         <div>投稿者: {{ object.author }}</div>
         <div>日時: {{ object.created_at }}</div>
         <div>{{ object.content }}</div>
+        <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
     </article>
 {% endblock %}
