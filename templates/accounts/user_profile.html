@@ -3,5 +3,12 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-<p>{{ user.username }}</p>
+<h2>Welcome {{ user.username }} !</h2>
+{% for tweet in object_list %}
+    <div>
+        <h3>{{ tweet.author }}</h3>
+        <div><p>{{ tweet.content }}</p></div>
+        <div><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></div>
+    </div>
+{% endfor %}
 {% endblock %}
