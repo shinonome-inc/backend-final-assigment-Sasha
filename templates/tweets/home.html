@@ -5,5 +5,17 @@
 {% block content %}
 <h1>Home</h1>
 <a href="{% url 'accounts:user_profile' user.username %}">プロフィール</a>
+<a href="{% url 'tweets:create' %}">ツイート作成</a>
 <a href="{% url 'accounts:logout' %}">ログアウト</a>
+
+{% for tweet in tweets %}
+<div>
+    <h3>{{ tweet.author }}</h3>
+    <div><a>{{ tweet.content }}</a></div>
+    <div>
+        <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
+    </div>
+    <br>
+</div>
+{% endfor %}
 {% endblock %}
