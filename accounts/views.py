@@ -1,12 +1,12 @@
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 
-from django.conf import settings
+from tweets.models import Tweet
 
 from .forms import SignupForm
-from tweets.models import Tweet
 
 
 class SignupView(CreateView):
@@ -30,7 +30,7 @@ class UserProfileView(LoginRequiredMixin, ListView):
 
     # URLから取得したusernameに関連するツイートのみを表示
     def get_queryset(self):
-        username = self.kwargs['username']
+        username = self.kwargs["username"]
         # 関連するユーザーモデルのusernameフィールドを使って絞り込む
         # author=usernameだとエラーが出る
         return Tweet.objects.filter(author__username=username)
