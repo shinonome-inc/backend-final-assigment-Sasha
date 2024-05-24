@@ -33,7 +33,7 @@ class TweetCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class TweetDetailView(DetailView):
+class TweetDetailView(LoginRequiredMixin, DetailView):
     model = Tweet
     template_name = "tweets/detail.html"
 
