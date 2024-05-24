@@ -1,12 +1,20 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView
+from django.views.generic import CreateView, ListView, DetailView
+from django.urls import reverse_lazy
 
+from django.conf import settings
 from .models import Tweet
 
 
-class HomeView(LoginRequiredMixin, TemplateView):  # LoginRequiredMixinでログインしたユーザーのみhomeにアクセス可能
+class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログインしたユーザーのみhomeにアクセス可能
+    model = Tweet
     template_name = "tweets/home.html"
+
+    # homeに全てのtweetを表示させる
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tweets"] = Tweet.objects.all()
+        return context
 
 
 class TweetCreateView(LoginRequiredMixin, CreateView):
@@ -14,7 +22,17 @@ class TweetCreateView(LoginRequiredMixin, CreateView):
     fields = ["content"]
     template_name = "tweets/create.html"
 
+    login_url = reverse_lazy(settings.LOGIN_URL)
+    success_url = reverse_lazy("accounts:user_profile")
+
+    # 保存処理のついでにログインユーザーをツイートに設定
     def form_valid(self, form):
-        form.instance.user = self.request.user
-        response = super().form_valid(form)  # formのvalid検証とデータベースへの保存
-        return response
+        tweet_instance = form.save(commit=False)
+        tweet_instance.user = self.request.user
+        tweet_instance.save()
+        return super().form_valid(form)
+
+
+class TweetDetailView(DetailView):
+    model = Tweet
+    template_name = "tweets/detail.html"
