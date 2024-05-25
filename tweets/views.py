@@ -23,13 +23,11 @@ class TweetCreateView(LoginRequiredMixin, CreateView):
     template_name = "tweets/create.html"
 
     login_url = reverse_lazy(settings.LOGIN_URL)
-    success_url = reverse_lazy("accounts:user_profile")
+    success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)
 
-    # 保存処理のついでにログインユーザーをツイートに設定
     def form_valid(self, form):
-        tweet_instance = form.save(commit=False)
-        tweet_instance.user = self.request.user
-        tweet_instance.save()
+        # authorを現在ログインしているユーザーに設定
+        form.instance.author = self.request.user
         return super().form_valid(form)
 
 
