@@ -4,7 +4,7 @@
 
 {% block content %}
 <h2>Welcome {{ user.username }} !</h2>
-{% for tweet in object_list %}
+{% for tweet in user_tweets %}
     <div>
         <h3>{{ tweet.author }}</h3>
         <div><p>{{ tweet.content }}</p></div>

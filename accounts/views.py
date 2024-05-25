@@ -27,6 +27,7 @@ class SignupView(CreateView):
 class UserProfileView(LoginRequiredMixin, ListView):
     model = Tweet
     template_name = "accounts/user_profile.html"
+    context_object_name = "user_tweets"
 
     # URLから取得したusernameに関連するツイートのみを表示
     def get_queryset(self):
