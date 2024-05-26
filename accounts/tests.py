@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from django.conf import settings
 from tweets.models import Tweet
 
 User = get_user_model()
@@ -314,7 +314,7 @@ class TestUserProfileView(TestCase):
         self.client.login(username="testuser", password="testpassword")
 
         # urlpatternがusernameを含むので
-        self.url = reverse("accounts:user_profile", kwargs={'username': self.user.username})
+        self.url = reverse("accounts:user_profile", kwargs={"username": self.user.username})
 
     def test_success_get(self):
 

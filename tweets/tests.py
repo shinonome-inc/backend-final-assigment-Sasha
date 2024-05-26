@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from django.conf import settings
 from .models import Tweet
 
 User = get_user_model()
@@ -28,7 +28,7 @@ class TestTweetCreateView(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpassword")
-        self.client.login(username="testuser", password='testpassword')
+        self.client.login(username="testuser", password="testpassword")
         self.url = reverse("tweets:create")
 
     def test_success_get(self):
@@ -140,6 +140,7 @@ class TestTweetDeleteView(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Tweet.objects.filter(pk=self.tweet.pk))
+
 
 # class TestLikeView(TestCase):
 #     def test_success_post(self):
