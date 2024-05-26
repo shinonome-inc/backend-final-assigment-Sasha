@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
+from django.core.exceptions import PermissionDenied
 
 from .models import Tweet
 
@@ -22,7 +23,6 @@ class TweetCreateView(LoginRequiredMixin, CreateView):
     fields = ["content"]
     template_name = "tweets/create.html"
 
-    login_url = reverse_lazy(settings.LOGIN_URL)
     success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)
 
     def form_valid(self, form):
@@ -40,3 +40,10 @@ class TweetDeleteView(LoginRequiredMixin, DeleteView):
     model = Tweet
     template_name = "tweets/delete.html"
     success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)
+
+    def dispatch(self, request, *args, **kwargs):
+
+        tweet = self.get_object()
+        if tweet.author != request.user:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
