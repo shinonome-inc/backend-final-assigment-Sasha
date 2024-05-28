@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, TemplateView
 
 from .forms import SignupForm
 
@@ -8,7 +10,7 @@ from .forms import SignupForm
 class SignupView(CreateView):
     form_class = SignupForm
     template_name = "accounts/signup.html"
-    success_url = reverse_lazy("tweets:home")
+    success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)
 
     def form_valid(self, form):
         response = super().form_valid(form)  # 既に作成したユーザーデータを上書きするため、オーバーライドする
@@ -17,4 +19,8 @@ class SignupView(CreateView):
         # authenticate関数で認証に使用するため、usernameとpasswordを抜き出した
         user = authenticate(self.request, username=username, password=password)
         login(self.request, user)
-        return response  # success_urlにリダイレクトさせている
+        return response  # 登録後success_urlにリダイレクトさせている
+
+
+class UserProfileView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/user_profile.html"
