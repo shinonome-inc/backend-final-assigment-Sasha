@@ -49,9 +49,9 @@ class FollowView(LoginRequiredMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         follow = self.get_object()
 
-        if not follow.followed:
+        if not follow.being_followed:
             raise Http404("存在しないユーザーをフォローすることはできません。")
-        elif follow.followed == follow.follower:
+        elif follow.following == follow.being_followed:
             return HttpResponseBadRequest("自分自身をフォローすることは不可能です。")
         return super().dispatch(request, *args, **kwargs)
 
@@ -73,8 +73,8 @@ class UnFollowView(LoginRequiredMixin, DeleteView):
     def dispatch(self, request, *args, **kwargs):
         follow = self.get_object()
 
-        if not follow.followed:
+        if not follow.being_followed:
             raise Http404("存在しないユーザーをフォローすることはできません。")
-        elif follow.followed == follow.follower:
+        elif follow.following == follow.being_followed:
             return HttpResponseBadRequest("自分自身をフォローすることは不可能です。")
         return super().dispatch(request, *args, **kwargs)
