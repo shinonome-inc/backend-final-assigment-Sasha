@@ -32,6 +32,5 @@ class UserProfileView(LoginRequiredMixin, ListView):
     # URLから取得したusernameに関連するツイートのみを表示
     def get_queryset(self):
         username = self.kwargs["username"]
-        # 関連するユーザーモデルのusernameフィールドを使って絞り込む
-        # author=usernameだとエラーが出る
-        return Tweet.objects.filter(author__username=username)
+        # n+1問題の防止
+        return Tweet.objects.filter(author__username=username).select_related("author")
