@@ -13,10 +13,7 @@ class TestSignupView(TestCase):
     def setUp(self):
         self.url = reverse("accounts:signup")
 
-    # 異常系テストでチェックしたい部分を関数にしてまとめる
     def get_response_and_assert_form_errors_if_invalid_data(self, data, fields_and_error_messages):
-
-        # fields_and_errorg_messages = {field: error_message, ...}
 
         response = self.client.post(self.url, data)
         form = response.context["form"]
