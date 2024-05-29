@@ -6,11 +6,10 @@ from django.http import Http404, HttpResponseBadRequest
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, DeleteView
 
-from accounts.models import User
-from tweets.models import Tweet
 
-from .forms import SignupForm
+from tweets.models import Tweet
 from .models import Follow, User
+from .forms import SignupForm
 
 
 class SignupView(CreateView):
@@ -56,7 +55,7 @@ class FollowView(LoginRequiredMixin, CreateView):
 
         if not follow.being_followed:
             raise Http404("存在しないユーザーをフォローすることはできません。")
-        elif follow.following == follow.being_followed:
+        elif follow.following_user == follow.being_followed_user:
             return HttpResponseBadRequest("自分自身をフォローすることは不可能です。")
         return super().dispatch(request, *args, **kwargs)
 
@@ -80,6 +79,6 @@ class UnFollowView(LoginRequiredMixin, DeleteView):
 
         if not follow.being_followed:
             raise Http404("存在しないユーザーをフォローすることはできません。")
-        elif follow.following == follow.being_followed:
+        elif follow.following_user == follow.being_followed_user:
             return HttpResponseBadRequest("自分自身をフォローすることは不可能です。")
         return super().dispatch(request, *args, **kwargs)

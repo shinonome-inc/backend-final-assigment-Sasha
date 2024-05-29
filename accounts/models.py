@@ -8,9 +8,9 @@ class User(AbstractUser):
 
 class Follow(models.Model):
     # followしているユーザー
-    follower = models.ForeignKey(User, related_name="following", on_delete=models.CASCADE)
+    follower = models.ForeignKey(User, related_name="following_user", on_delete=models.CASCADE)
     # followされているユーザー
-    followed = models.ForeignKey(User, related_name="being_followed", on_delete=models.CASCADE)
+    followed = models.ForeignKey(User, related_name="being_followed_user", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
