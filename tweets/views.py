@@ -10,6 +10,7 @@ from .models import Tweet
 class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログインしたユーザーのみhomeにアクセス可能
     model = Tweet
     template_name = "tweets/home.html"
+    ordering = ["-created_at"]
 
     # homeに全てのtweetを表示させる
     def get_context_data(self, **kwargs):

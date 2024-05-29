@@ -318,7 +318,7 @@ class TestUserProfileView(TestCase):
         response = self.client.get(self.url)
 
         # context内のツイートとdb内のツイートを準備
-        context_tweets = response.context["user_tweets"]
+        context_tweets = response.context["specific_user_tweet"]
         db_tweets = Tweet.objects.filter(author=self.user)
 
         # context内のツイート一覧 = DB内にある該当ユーザーのツイート一覧になるか？
