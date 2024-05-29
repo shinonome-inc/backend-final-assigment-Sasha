@@ -10,7 +10,7 @@
 
 {% for tweet in tweets %}
 <div>
-    <h3>{{ tweet.author }}</h3>
+    <a href="{% url 'accounts:user_profile' tweet.author.username %}">{{ tweet.author }}</a>
     <div><a>{{ tweet.content }}</a></div>
     <div>
         <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>

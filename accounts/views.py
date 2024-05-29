@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
 from django.http import Http404, HttpResponseBadRequest
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView
+from django.views.generic import CreateView, DetailView, DeleteView
 
+from accounts.models import User
 from tweets.models import Tweet
 
 from .forms import SignupForm
@@ -17,27 +19,30 @@ class SignupView(CreateView):
     success_url = reverse_lazy(settings.LOGIN_REDIRECT_URL)
 
     def form_valid(self, form):
-
-        response = super().form_valid(form)  # 既に作成したユーザーデータを上書きするため、オーバーライドする
+        response = super().form_valid(form)
         username = form.cleaned_data["username"]
         password = form.cleaned_data["password1"]
         # authenticate関数で認証に使用するため、usernameとpasswordを抜き出した
         user = authenticate(self.request, username=username, password=password)
         login(self.request, user)
-        return response  # 登録後success_urlにリダイレクトさせている
+        return response
 
 
-class UserProfileView(LoginRequiredMixin, ListView):
-    model = Tweet
+class UserProfileView(LoginRequiredMixin, DetailView):
+    model = User
     template_name = "accounts/user_profile.html"
-    context_object_name = "user_tweets"
+    pk_url_kwarg = "username"
 
-    # URLから取得したusernameに関連するツイートのみを表示
-    def get_queryset(self):
+    def get_object(self, queryset=None):
+        username = self.kwargs.get(self.pk_url_kwarg)
+        return get_object_or_404(User, username=username)
 
-        username = self.kwargs["username"]
-        # n+1問題を防止する
-        return Tweet.objects.filter(author__username=username).select_related("author")
+    def get_context_data(self, **kwargs):
+        # contextを上書きしてtweetリストをプロフィールに追加する
+        context = super().get_context_data(**kwargs)
+        user = self.object
+        context["specific_user_tweet"] = Tweet.objects.filter(author=user).select_related("author")
+        return context
 
 
 class FollowView(LoginRequiredMixin, CreateView):
