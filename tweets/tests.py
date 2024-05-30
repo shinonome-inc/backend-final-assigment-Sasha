@@ -70,7 +70,7 @@ class TestTweetCreateView(TestCase):
         while len(too_long_text) < 290:
             too_long_text += "too long"
 
-        too_long_form_data = {"content": f"{too_long_text}"}
+        too_long_form_data = {"content": too_long_text}
         response = self.client.post(self.url, too_long_form_data)
         form = response.context["form"]
 

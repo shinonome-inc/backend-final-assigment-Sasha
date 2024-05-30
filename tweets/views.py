@@ -15,7 +15,7 @@ class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログイ�
     # homeに全てのtweetを表示させる
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["tweets"] = Tweet.objects.all()
+        context["tweets"] = Tweet.objects.all().select_related("author")
         return context
 
 
