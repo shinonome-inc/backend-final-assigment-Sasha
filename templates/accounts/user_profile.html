@@ -4,13 +4,22 @@
 
 {% block content %}
 <h2>This is the profile of {{ object }}.</h2>
+{% ifequal user.username fo%}
+<form action="{% url 'accounts:follow' user.username %}" method="post">
+    {% csrf_token %}
+    <P><input type="submit" value="フォロー"></P>
+</form>
+{% else %}
+<form action="{% url 'accounts:unfollow' user.username %}" method="post">
+    {% csrf_token %}
+    <p><input type="submit" value="アンフォロー"></p>
+</form>
+{% endif %}
 {% for tweet in specific_user_tweet %}
 <div>
     <h3>{{ tweet.author }}</h3>
-    <div>
-        <p>{{ tweet.content }}</p>
-    </div>
-    <div><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></div>
+    <p>{{ tweet.content }}</p>
+    <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
     <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
 </div>
 {% endfor %}
