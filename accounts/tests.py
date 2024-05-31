@@ -309,9 +309,12 @@ class TestUserProfileView(TestCase):
         self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpassword")
         # ログインさせる
         self.client.login(username="testuser", password="testpassword")
-
         # urlpatternがusernameを含むので
         self.url = reverse("accounts:user_profile", kwargs={"username": self.user.username})
+        # テスト用のツイートを追加
+        Tweet.objects.create(content="This is the test tweet.", author=self.user)
+        # ダミーユーザーを追加
+        User.objects.create(username="dummyuser", email="dummy@dummy.com", password="dummypassword")
 
     def test_success_get(self):
 
