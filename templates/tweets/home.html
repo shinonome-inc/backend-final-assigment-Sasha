@@ -5,11 +5,18 @@
 {% block content %}
 <h1>Home</h1>
 <a href="{% url 'accounts:user_profile' user.username %}">プロフィール</a>
+<a href="{% url 'tweets:create' %}">ツイート作成</a>
+<a href="{% url 'accounts:logout' %}">ログアウト</a>
 
-<!--ログアウト機能-->
-<form method="post" action="{% url 'accounts:logout' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">ログアウト</button>
-</form>
+{% for tweet in tweets %}
+<div>
+    <a href="{% url 'accounts:user_profile' tweet.author.username %}">{{ tweet.author }}</a>
+    <div><a>{{ tweet.content }}</a></div>
+    <div>
+        <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
+        <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
+    </div>
+    <br>
+</div>
+{% endfor %}
 {% endblock %}

@@ -1,8 +1,9 @@
+from django.conf import settings
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from mysite.settings import LOGIN_REDIRECT_URL, LOGOUT_REDIRECT_URL
+from tweets.models import Tweet
 
 User = get_user_model()
 
@@ -24,11 +25,14 @@ class TestSignupView(TestCase):
             self.assertIn(error_message, form.errors[field])
 
     def test_success_get(self):
+
         response = self.client.get(self.url)  # clientからのGETリクエストをシュミレーションする
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response=response, template_name="accounts/signup.html")
 
     def test_success_post(self):
+
         valid_data = {
             "username": "testuser",
             "email": "test@test.com",
@@ -41,7 +45,7 @@ class TestSignupView(TestCase):
         # 確認1: LOGIN_REDIRECT_URLにリダイレクトしているか
         self.assertRedirects(
             response,
-            expected_url=reverse(LOGIN_REDIRECT_URL),
+            expected_url=reverse(settings.LOGIN_REDIRECT_URL),
             status_code=302,
             target_status_code=200,
         )
@@ -52,6 +56,7 @@ class TestSignupView(TestCase):
         self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_form(self):
+
         invalid_data = {
             "username": "",
             "email": "",
@@ -70,6 +75,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_empty_username(self):
+
         invalid_data = {
             "username": "",
             "email": "test@test.com",
@@ -85,6 +91,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_empty_email(self):
+
         invalid_data = {
             "username": "testuser",
             "email": "",
@@ -100,6 +107,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_empty_password(self):
+
         invalid_data = {
             "username": "testuser",
             "email": "test@test.com",
@@ -138,6 +146,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_invalid_email(self):
+
         invalid_data = {
             "username": "testuser",
             "email": "testemail",
@@ -153,6 +162,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_too_short_password(self):
+
         invalid_data = {
             "username": "testuser",
             "email": "test@test.com",
@@ -168,6 +178,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_password_similar_to_username(self):
+
         invalid_data = {
             "username": "passwordsimilar",
             "email": "test@test.com",
@@ -183,6 +194,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_only_numbers_password(self):
+
         invalid_data = {
             "username": "testuser",
             "email": "test@test.com",
@@ -198,6 +210,7 @@ class TestSignupView(TestCase):
         self.get_response_and_assert_form_errors_if_invalid_data(invalid_data, fields_and_error_messages)
 
     def test_failure_post_with_mismatch_password(self):
+
         invalid_data = {
             "username": "testuser",
             "email": "test@test.com",
@@ -216,8 +229,8 @@ class TestSignupView(TestCase):
 class TestLoginView(TestCase):
 
     def setUp(self):
-        self.url = reverse("accounts:login")
         self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpassword")
+        self.url = reverse("accounts:login")
 
     def test_success_get(self):
         response = self.client.get(self.url)
@@ -233,7 +246,7 @@ class TestLoginView(TestCase):
         # 確認1: LOGIN_REDIRECT_URLにリダイレクトされるか
         self.assertRedirects(
             response,
-            expected_url=reverse(LOGIN_REDIRECT_URL),
+            expected_url=reverse(settings.LOGIN_REDIRECT_URL),
             status_code=302,
             target_status_code=200,
         )
@@ -241,6 +254,7 @@ class TestLoginView(TestCase):
         self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_not_exists_user(self):
+
         invalid_data = {
             "username": "nonexistentuser",
             "password": "testpassword",
@@ -257,6 +271,7 @@ class TestLoginView(TestCase):
         self.assertNotIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_password(self):
+
         invalid_data = {
             "username": "testuser",
             "password": "",
@@ -280,15 +295,37 @@ class TestLogoutView(TestCase):
 
         self.assertRedirects(
             response,
-            expected_url=reverse(LOGOUT_REDIRECT_URL),
+            expected_url=reverse(settings.LOGOUT_REDIRECT_URL),
             status_code=302,
             target_status_code=200,
         )
         self.assertNotIn(SESSION_KEY, self.client.session)
 
 
-# class TestUserProfileView(TestCase):
-#     def test_success_get(self):
+class TestUserProfileView(TestCase):
+
+    def setUp(self):
+        # ユーザーを作成
+        self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpassword")
+        # ログインさせる
+        self.client.login(username="testuser", password="testpassword")
+        # urlpatternがusernameを含むので
+        self.url = reverse("accounts:user_profile", kwargs={"username": self.user.username})
+        # テスト用のツイートを追加
+        Tweet.objects.create(content="This is the test tweet.", author=self.user)
+        # ダミーユーザーを追加
+        User.objects.create(username="dummyuser", email="dummy@dummy.com", password="dummypassword")
+
+    def test_success_get(self):
+
+        response = self.client.get(self.url)
+
+        # context内のツイートとdb内のツイートを準備
+        context_tweets = response.context["specific_user_tweet"]
+        db_tweets = Tweet.objects.filter(author=self.user)
+
+        # context内のツイート一覧 = DB内にある該当ユーザーのツイート一覧になるか？
+        self.assertEqual(list(context_tweets), list(db_tweets))
 
 
 # class TestUserProfileEditView(TestCase):

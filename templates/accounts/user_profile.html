@@ -3,5 +3,15 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-<p>{{ user.username }}</p>
+<h2>This is the profile of {{ object }}.</h2>
+{% for tweet in specific_user_tweet %}
+<div>
+    <h3>{{ tweet.author }}</h3>
+    <div>
+        <p>{{ tweet.content }}</p>
+    </div>
+    <div><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></div>
+    <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
+</div>
+{% endfor %}
 {% endblock %}
