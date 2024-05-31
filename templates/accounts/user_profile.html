@@ -6,8 +6,8 @@
 <h2>This is the profile of {{ profile_user }}.</h2>
 <table>
     <tr>
-        <td><a href="{% url 'accounts:following_list' object.username %}">フォローリスト</a></td>
-        <td><a href="{% url 'accounts:follower_list' object.username %}">フォロワーリスト</a></td>
+        <td><a href="{% url 'accounts:following_list' object.username %}">フォロー数: {{ following_num }}</a></td>
+        <td><a href="{% url 'accounts:follower_list' object.username %}">フォロワー数: {{ follower_num }}</a></td>
     </tr>
 </table>
 

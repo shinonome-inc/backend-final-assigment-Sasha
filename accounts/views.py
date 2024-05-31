@@ -49,12 +49,18 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 
         context = super().get_context_data(**kwargs)
         # 特定ユーザーtweetのリストをプロフィールに追加する
-        user = self.object
+        profile_user = self.object
 
         # プロフィールユーザ特有のツイートをcontextに渡す
-        context["specific_user_tweet"] = Tweet.objects.filter(author=user).select_related("author")
-        # リクエストユーザとプロフィールユーザ間のFollow関係が既にあるか確認するため
-        context["follow"] = Follow.objects.filter(follower=self.request.user, followed=user).exists()
+        context["specific_user_tweet"] = Tweet.objects.filter(author=profile_user).select_related("author")
+
+        # リクエストユーザとプロフィールユーザにの間に交友関係があるフォローインスタンス
+        # フォロー済みであるか調べるためにcontextに渡す
+        context["follow"] = Follow.objects.filter(follower=self.request.user, followed=profile_user).exists()
+
+        # プロフィールユーザがフォローしている・されている数
+        context["following_num"] = Follow.objects.filter(follower=profile_user).count()
+        context["follower_num"] = Follow.objects.filter(followed=profile_user).count()
 
         return context
 
