@@ -76,7 +76,9 @@ class TestTweetCreateView(TestCase):
         form = response.context["form"]
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(f"この値は 280 文字以下でなければなりません( {text_length} 文字になっています)。", form.errors["content"])
+        self.assertIn(
+            f"この値は 280 文字以下でなければなりません( {text_length} 文字になっています)。", form.errors["content"]
+        )
         self.assertEqual(Tweet.objects.all().count(), 0)
 
 
