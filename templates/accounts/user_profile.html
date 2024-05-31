@@ -3,18 +3,34 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-<h2>This is the profile of {{ object }}.</h2>
-{% ifequal user.username fo%}
-<form action="{% url 'accounts:follow' user.username %}" method="post">
-    {% csrf_token %}
-    <P><input type="submit" value="フォロー"></P>
-</form>
-{% else %}
-<form action="{% url 'accounts:unfollow' user.username %}" method="post">
-    {% csrf_token %}
-    <p><input type="submit" value="アンフォロー"></p>
-</form>
-{% endif %}
+<h2>This is the profile of {{ profile_user }}.</h2>
+<table>
+    <tr>
+        <td><a href="{% url 'accounts:following_list' object.username %}">フォローリスト</a></td>
+        <td><a href="{% url 'accounts:follower_list' object.username %}">フォロワーリスト</a></td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        {% if follow %}
+        <td>
+            <form action="{% url 'accounts:unfollow' object.username %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="アンフォロー">
+            </form>
+        </td>
+        {% else %}
+        <td>
+            <form action="{% url 'accounts:follow' object.username %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="フォロー">
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+</table>
+
 {% for tweet in specific_user_tweet %}
 <div>
     <h3>{{ tweet.author }}</h3>

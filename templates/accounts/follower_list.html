@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Follower List{% endblock %}
+
+{% block content %}
+
+{% for follow in follow_list %}
+    <p>{{ follow.follower }}</p>
+{% endfor %}
+
+{% endblock %}
