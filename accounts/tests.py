@@ -5,6 +5,8 @@ from django.urls import reverse
 
 from tweets.models import Tweet
 
+from .models import Follow
+
 User = get_user_model()
 
 
@@ -305,13 +307,15 @@ class TestLogoutView(TestCase):
 class TestUserProfileView(TestCase):
 
     def setUp(self):
-        # ユーザーを作成
-        self.user = User.objects.create_user(username="testuser", email="test@test.com", password="testpassword")
-        # ログインさせる
-        self.client.login(username="testuser", password="testpassword")
+        # user1がuser2をフォローしている
+        # 想定: user1が自分のプロフィール画面を見ている
+        self.user1 = User.objects.create_user(username="testuser1", email="test1@test.com", password="testpassword1")
+        self.user2 = User.objects.create_user(username="testuser2", email="test2@test.com", password="testpassword2")
+        Follow.objects.create(follower=self.user1, followed=self.user2)
 
+        self.client.login(username="testuser1", password="testpassword1")
         # urlpatternがusernameを含むので
-        self.url = reverse("accounts:user_profile", kwargs={"username": self.user.username})
+        self.url = reverse("accounts:user_profile", kwargs={"username": self.user1.username})
 
     def test_success_get(self):
 
@@ -319,41 +323,134 @@ class TestUserProfileView(TestCase):
 
         # context内のツイートとdb内のツイートを準備
         context_tweets = response.context["specific_user_tweet"]
-        db_tweets = Tweet.objects.filter(author=self.user)
+        db_tweets = Tweet.objects.filter(author=self.user1)
+
+        # context内のフォロー・フォロワー数(user1)
+        context_following_num = response.context["following_num"]
+        context_follower_num = response.context["follower_num"]
+        # DB内のフォロー・フォロワー数(user1)
+        db_following_num = Follow.objects.filter(follower=self.user1, followed=self.user2).count()
+        db_follower_num = Follow.objects.filter(follower=self.user2, followed=self.user1).count()
 
         # context内のツイート一覧 = DB内にある該当ユーザーのツイート一覧になるか？
         self.assertEqual(list(context_tweets), list(db_tweets))
+        # context内のフォロー数 = DB内のフォロー数?
+        self.assertEqual(context_following_num, db_following_num)
+        # context内のフォロワー数 = DB内のフォロワー数?
+        self.assertEqual(context_follower_num, db_follower_num)
 
 
-# class TestUserProfileEditView(TestCase):
-#     def test_success_get(self):
+class TestFollowView(TestCase):
 
-#     def test_success_post(self):
+    def setUp(self):
+        # 想定: ログイン状態のuser1がuser2をフォローする
+        self.user1 = User.objects.create_user(username="testuser1", email="test1@test.com", password="testpassword1")
+        self.user2 = User.objects.create_user(username="testuser2", email="test2@test.com", password="testpassword2")
+        self.client.login(username="testuser1", password="testpassword1")
+        self.url = reverse("accounts:follow", kwargs={"username": self.user2.username})
 
-#     def test_failure_post_with_not_exists_user(self):
+    def test_success_post(self):
 
-#     def test_failure_post_with_incorrect_user(self):
+        response = self.client.post(self.url)
+
+        self.assertRedirects(
+            response,
+            expected_url=reverse(settings.LOGIN_REDIRECT_URL),
+            status_code=302,
+            target_status_code=200,
+        )
+
+        self.assertEqual(Follow.objects.all().count(), 1)
+
+    def test_failure_post_with_not_exist_user(self):
+
+        # 存在しないユーザーネームをURLパラメータに指定する
+        nonexistent_username_url = reverse("accounts:follow", kwargs={"username": "nonexistentusername"})
+        response = self.client.post(nonexistent_username_url)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Follow.objects.all().exists())
+
+    def test_failure_post_with_self(self):
+
+        self_username_url = reverse("accounts:follow", kwargs={"username": self.user1.username})
+        response = self.client.post(self_username_url)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Follow.objects.all().exists())
 
 
-# class TestFollowView(TestCase):
-#     def test_success_post(self):
+class TestUnfollowView(TestCase):
 
-#     def test_failure_post_with_not_exist_user(self):
+    def setUp(self):
+        # user1がuser2をフォローしている
+        # user1がuser2のプロフィール画面でアンフォローする
+        self.user1 = User.objects.create_user(username="testuser1", email="test1@test.com", password="testpassword1")
+        self.user2 = User.objects.create_user(username="testuser2", email="test2@test.com", password="testpassword2")
+        Follow.objects.create(follower=self.user1, followed=self.user2)
+        self.client.login(username="testuser1", password="testpassword1")
 
-#     def test_failure_post_with_self(self):
+    def test_success_post(self):
+
+        valid_url = reverse("accounts:unfollow", kwargs={"username": self.user2.username})
+        response = self.client.post(valid_url)
+
+        self.assertRedirects(
+            response,
+            expected_url=reverse(settings.LOGIN_REDIRECT_URL),
+            target_status_code=200,
+        )
+        self.assertEqual(Follow.objects.all().count(), 0)
+
+    def test_failure_post_with_not_exist_user(self):
+
+        nonexistent_username_url = reverse("accounts:unfollow", kwargs={"username": "nonexistentusername"})
+        response = self.client.post(nonexistent_username_url)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(Follow.objects.all().count(), 1)
+
+    def test_failure_post_with_self(self):
+
+        self_username_url = reverse("accounts:follow", kwargs={"username": self.user1.username})
+
+        response = self.client.post(self_username_url)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Follow.objects.all().count(), 1)
 
 
-# class TestUnfollowView(TestCase):
-#     def test_success_post(self):
+class TestFollowingListView(TestCase):
 
-#     def test_failure_post_with_not_exist_tweet(self):
+    def setUp(self):
+        # 想定: ログイン状態のuser1が、自分のフォローしているuser2を一覧で見る
+        self.user1 = User.objects.create_user(username="testuser1", email="test1@test.com", password="testpassword1")
+        self.user2 = User.objects.create_user(username="testuser2", email="test2@test.com", password="testpassword2")
+        Follow.objects.create(follower=self.user1, followed=self.user2)
 
-#     def test_failure_post_with_incorrect_user(self):
+        self.client.login(username="testuser1", password="testpassword1")
+        self.url = reverse("accounts:following_list", kwargs={"username": self.user1.username})
+
+    def test_success_get(self):
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
 
 
-# class TestFollowingListView(TestCase):
-#     def test_success_get(self):
+class TestFollowerListView(TestCase):
+    # 想定: user1がフォローしていたuser2をアンフォローする
+    def setUp(self):
 
+        self.user1 = User.objects.create_user(username="testuser1", email="test1@test.com", password="testpassword1")
+        self.user2 = User.objects.create_user(username="testuser2", email="test2@test.com", password="testpassword2")
+        # 一覧で表示するために、Followインスタンスを作成
+        Follow.objects.create(follower=self.user1, followed=self.user2)
+        self.client.login(username="testuser1", password="testpassword1")
+        self.url = reverse("accounts:follower_list", kwargs={"username": self.user1.username})
 
-# class TestFollowerListView(TestCase):
-#     def test_success_get(self):
+    def test_success_get(self):
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
