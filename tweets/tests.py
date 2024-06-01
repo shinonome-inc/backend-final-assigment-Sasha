@@ -14,6 +14,8 @@ class TestHomeView(TestCase):
         self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         self.url = reverse("tweets:home")
+        # テスト用のツイートを追加
+        Tweet.objects.create(content="This is the test tweet.", author=self.user)
 
     def test_success_get(self):
 
@@ -66,16 +68,17 @@ class TestTweetCreateView(TestCase):
     def test_failure_post_with_too_long_content(self):
 
         # max lengh text(280)を超えるtextを用意
-        too_long_text = ""
-        while len(too_long_text) < 290:
-            too_long_text += "too long"
+        text_length = 281
+        too_long_text = "a" * text_length
 
-        too_long_form_data = {"content": f"{too_long_text}"}
+        too_long_form_data = {"content": too_long_text}
         response = self.client.post(self.url, too_long_form_data)
         form = response.context["form"]
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("この値は 280 文字以下でなければなりません( 296 文字になっています)。", form.errors["content"])
+        self.assertIn(
+            f"この値は 280 文字以下でなければなりません( {text_length} 文字になっています)。", form.errors["content"]
+        )
         self.assertEqual(Tweet.objects.all().count(), 0)
 
 
@@ -131,8 +134,8 @@ class TestTweetDeleteView(TestCase):
 
     def test_failure_post_with_incorrect_user(self):
 
-        # self.userを他のユーザーで上書きして、元のユーザーが作ったtweetを削除しようとしてみる
-        self.user = User.objects.create_user(username="testuser2", password="testpassword2")
+        # 異なるユーザーでログインし、元のユーザーが作ったtweetを削除しようとしてみる
+        self.client.logout()
         self.client.login(username="testuser2", password="testpassword2")
 
         url = reverse("tweets:delete", kwargs={"pk": self.tweet.pk})  # self.tweetは他のユーザーが作成したtweet

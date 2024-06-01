@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
@@ -16,7 +16,7 @@ class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログイ�
         # homeに全てのtweetを表示させる
 
         context = super().get_context_data(**kwargs)
-        context["tweets"] = Tweet.objects.all()
+        context["tweets"] = Tweet.objects.all().select_related("author")
         return context
 
 
@@ -47,5 +47,5 @@ class TweetDeleteView(LoginRequiredMixin, DeleteView):
 
         tweet = self.get_object()
         if tweet.author != request.user:
-            raise PermissionDenied
+            return HttpResponseForbidden("あなたにこのユーザーのツイートを削除する権限はありません。")
         return super().dispatch(request, *args, **kwargs)

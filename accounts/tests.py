@@ -307,6 +307,7 @@ class TestLogoutView(TestCase):
 class TestUserProfileView(TestCase):
 
     def setUp(self):
+
         # user1がuser2をフォローしている
         # 想定: user1が自分のプロフィール画面を見ている
         self.user1 = User.objects.create_user(username="testuser1", email="test1@test.com", password="testpassword1")
