@@ -1,10 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
-from .models import Tweet
+from .models import Tweet, Like
 
 
 class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログインしたユーザーのみhomeにアクセス可能
@@ -49,3 +50,29 @@ class TweetDeleteView(LoginRequiredMixin, DeleteView):
         if tweet.author != request.user:
             return HttpResponseForbidden("あなたにこのユーザーのツイートを削除する権限はありません。")
         return super().dispatch(request, *args, **kwargs)
+
+
+class LikeView(LoginRequiredMixin, CreateView):
+    model = Like
+    fields = []
+
+    def form_valid(self, form):
+        # urlのパラメータからいいね対象のtweetを特定
+        likded_tweet_pk = self.kwargs["pk"]
+        form.instance.liked_tweet = Tweet.objects.get(pk=likded_tweet_pk)
+        # いいねしたユーザー = ログインユーザー
+        form.instance.liking_user = self.request.user
+        return super().form_valid(form)
+
+
+class UnlikeView(LoginRequiredMixin, DeleteView):
+    model = Like
+    pk_url_kwarg = "pk"
+
+    def get_object(self, queryset=None):
+
+        likded_tweet_pk = self.kwargs["pk"]
+        likded_tweet = Tweet.objects.get(pk=likded_tweet_pk)
+
+        liking_user = self.request.user
+        return get_object_or_404(Like, tweet=likded_tweet, user=liking_user)

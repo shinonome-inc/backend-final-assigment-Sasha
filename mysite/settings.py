@@ -132,7 +132,7 @@ LOGIN_REDIRECT_URL = "tweets:home"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 # pushする時はFALSEにしないとテストに通らなくなる
-SQL_DEBUG = None
+SQL_DEBUG = True
 
 if SQL_DEBUG:
 

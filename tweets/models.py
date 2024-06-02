@@ -10,9 +10,9 @@ class Tweet(models.Model):
 
 
 class Like(models.Model):
-    # likeとuser, tweetのモデル間関係は'one-to-many'
-    user = models.ForeignKey(User, related_name="liking_user", on_delete=models.CASCADE)
+    # likeとtweet, userのモデル間関係は'one-to-many'
     tweet = models.ForeignKey(Tweet, related_name="liked_tweet", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="liking_user", on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ("user", "tweet")
