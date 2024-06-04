@@ -14,4 +14,4 @@ class Follow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("follower", "followed")  # 絶対にfollowerとfollowedは等しくなる
+        constraints = [models.UniqueConstraint(fields=["follower", "followed"], name="unique_follow")]
