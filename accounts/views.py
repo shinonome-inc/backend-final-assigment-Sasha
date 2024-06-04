@@ -137,7 +137,7 @@ class FollowingListView(LoginRequiredMixin, ListView):
         """
         username = self.kwargs.get(self.pk_url_kwarg)
         profile_user = User.objects.get(username=username)
-        return Follow.objects.filter(follower=profile_user)
+        return Follow.objects.filter(follower=profile_user).select_related("followed")
 
 
 class FollowerListView(LoginRequiredMixin, ListView):
@@ -152,4 +152,4 @@ class FollowerListView(LoginRequiredMixin, ListView):
         """
         username = self.kwargs.get(self.pk_url_kwarg)
         profile_user = User.objects.get(username=username)
-        return Follow.objects.filter(followed=profile_user)
+        return Follow.objects.filter(followed=profile_user).select_related("follower")
