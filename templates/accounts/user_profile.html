@@ -3,14 +3,39 @@
 {% block title %}User Profile{% endblock %}
 
 {% block content %}
-<h2>This is the profile of {{ object }}.</h2>
+<h2>This is the profile of {{ profile_user }}.</h2>
+<table>
+    <tr>
+        <td><a href="{% url 'accounts:following_list' object.username %}">フォロー数: {{ following_num }}</a></td>
+        <td><a href="{% url 'accounts:follower_list' object.username %}">フォロワー数: {{ follower_num }}</a></td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        {% if follow %}
+        <td>
+            <form action="{% url 'accounts:unfollow' object.username %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="アンフォロー">
+            </form>
+        </td>
+        {% else %}
+        <td>
+            <form action="{% url 'accounts:follow' object.username %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="フォロー">
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+</table>
+
 {% for tweet in specific_user_tweet %}
 <div>
     <h3>{{ tweet.author }}</h3>
-    <div>
-        <p>{{ tweet.content }}</p>
-    </div>
-    <div><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></div>
+    <p>{{ tweet.content }}</p>
+    <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
     <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
 </div>
 {% endfor %}

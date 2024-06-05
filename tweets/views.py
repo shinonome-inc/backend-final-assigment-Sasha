@@ -12,8 +12,9 @@ class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログイ�
     template_name = "tweets/home.html"
     ordering = ["-created_at"]
 
-    # homeに全てのtweetを表示させる
     def get_context_data(self, **kwargs):
+        # homeに全てのtweetを表示させる
+
         context = super().get_context_data(**kwargs)
         context["tweets"] = Tweet.objects.all().select_related("author")
         return context
