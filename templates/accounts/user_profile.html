@@ -35,8 +35,68 @@
 <div>
     <h3>{{ tweet.author }}</h3>
     <p>{{ tweet.content }}</p>
+</div>
+    <button class="like-btn" data-tweet-id="{{ tweet.pk }}" data-liked="{% if request.user in tweet.liked_tweet.all %}true{% else %}false{% endif %}">
+        {% if request.user in tweet.liked_tweet.all %}
+            Unlike
+        {% else %}
+            like
+        {% endif %}
+    </button>
+<div>
+    <span id="like-count-{{ tweet.pk }}">{{ tweet.liked_tweet.count }} likes</span>
     <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
     <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const likeButtons = document.querySelectorAll(".like-btn");
+
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const tweetId = this.dataset.tweetId;
+                const isLiked = this.dataset.liked === 'true';
+                const url = isLiked ? `/tweets/${tweetId}/unlike/` : `/tweets/${tweetId}/like/`;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                    } else {
+                        document.querySelector(`#like-count-${tweetId}`).textContent = `${data.like_count} likes`;
+                        this.textContent = data.status === 'liked' ? 'Unlike' : 'Like';
+                        this.dataset.liked = data.status === 'liked' ? 'true' : 'false';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endfor %}
 {% endblock %}
