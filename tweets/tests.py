@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Tweet, Like
+from .models import Like, Tweet
 
 User = get_user_model()
 
