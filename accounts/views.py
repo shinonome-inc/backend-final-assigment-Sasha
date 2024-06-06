@@ -51,8 +51,9 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 
         profile_user = self.object
         # プロフィールユーザ特有のツイートをcontextに渡す
-        context["specific_user_tweet"] = Tweet.objects.filter(author=profile_user).select_related("author")
-
+        context["specific_user_tweet"] = (
+            Tweet.objects.filter(author=profile_user).select_related("author").prefetch_related("liked_tweet")
+        )
         # フォロー済みであるか調べるためにcontextに渡す
         context["follow"] = Follow.objects.filter(follower=self.request.user, followed=profile_user).exists()
 

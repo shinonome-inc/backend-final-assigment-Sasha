@@ -15,4 +15,4 @@ class Like(models.Model):
     user = models.ForeignKey(User, related_name="liking_user", on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("user", "tweet")
+        constraints = [models.UniqueConstraint(fields=["tweet", "user"], name="unique_like")]

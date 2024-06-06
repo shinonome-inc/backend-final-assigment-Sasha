@@ -1,11 +1,13 @@
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView
+from django.utils.decorators import method_decorator
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, View
 
-from .models import Tweet, Like
+from .models import Like, Tweet
 
 
 class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログインしたユーザーのみhomeにアクセス可能
@@ -14,10 +16,8 @@ class HomeView(LoginRequiredMixin, ListView):  # LoginRequiredMixinでログイ�
     ordering = ["-created_at"]
 
     def get_context_data(self, **kwargs):
-        # homeに全てのtweetを表示させる
-
         context = super().get_context_data(**kwargs)
-        context["tweets"] = Tweet.objects.all().select_related("author")
+        context["tweets"] = Tweet.objects.all().select_related("author").prefetch_related("liked_tweet")
         return context
 
 
@@ -38,6 +38,13 @@ class TweetDetailView(LoginRequiredMixin, DetailView):
     model = Tweet
     template_name = "tweets/detail.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = (
+            Tweet.objects.select_related("author").prefetch_related("liked_tweet").get(pk=self.kwargs["pk"])
+        )
+        return context
+
 
 class TweetDeleteView(LoginRequiredMixin, DeleteView):
     model = Tweet
@@ -52,27 +59,34 @@ class TweetDeleteView(LoginRequiredMixin, DeleteView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class LikeView(LoginRequiredMixin, CreateView):
-    model = Like
-    fields = []
+@method_decorator(login_required, name="dispatch")
+class LikeView(View):
 
-    def form_valid(self, form):
-        # urlのパラメータからいいね対象のtweetを特定
-        likded_tweet_pk = self.kwargs["pk"]
-        form.instance.liked_tweet = Tweet.objects.get(pk=likded_tweet_pk)
-        # いいねしたユーザー = ログインユーザー
-        form.instance.liking_user = self.request.user
-        return super().form_valid(form)
+    def post(self, request, *args, **kwargs):
+        liked_tweet_pk = self.kwargs["pk"]
+        tweet = get_object_or_404(Tweet, pk=liked_tweet_pk)
+        user = self.request.user
+
+        like, created = Like.objects.get_or_create(tweet=tweet, user=user)
+        if not created:
+            return JsonResponse({"error": "Already Liked"}, status=200)
+
+        like_count = tweet.liked_tweet.count()
+        return JsonResponse({"status": "liked", "like_count": like_count})
 
 
-class UnlikeView(LoginRequiredMixin, DeleteView):
-    model = Like
-    pk_url_kwarg = "pk"
+@method_decorator(login_required, name="dispatch")
+class UnlikeView(View):
 
-    def get_object(self, queryset=None):
+    def post(self, request, *args, **kwargs):
+        liked_tweet_pk = self.kwargs["pk"]
+        tweet = get_object_or_404(Tweet, pk=liked_tweet_pk)
+        user = self.request.user
 
-        likded_tweet_pk = self.kwargs["pk"]
-        likded_tweet = Tweet.objects.get(pk=likded_tweet_pk)
-
-        liking_user = self.request.user
-        return get_object_or_404(Like, tweet=likded_tweet, user=liking_user)
+        try:
+            like = Like.objects.get(tweet=tweet, user=user)
+            like.delete()
+            like_count = tweet.liked_tweet.count()
+            return JsonResponse({"status": "unliked", "like_count": like_count})
+        except Like.DoesNotExist:
+            return JsonResponse({"error": "You cannot unlike this tweet"}, status=200)
