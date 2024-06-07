@@ -26,7 +26,15 @@
             button.addEventListener('click', function () {
                 const tweetId = this.dataset.tweetId;
                 const isLiked = this.dataset.liked === 'true';
+                const likeCountElement = document.querySelector(`#like-count-${tweetId}`);
+                const currentLikeCount = parseInt(likeCountElement.textContent);
                 const url = isLiked ? `/tweets/${tweetId}/unlike/` : `/tweets/${tweetId}/like/`;
+
+                // isLikedがtrue => これから、userがunlikeする
+                // isLikedがfalse => これから、userがlikeする
+                this.textContent = isLiked ? 'Unlike' : 'Like';
+                this.dataset.liked = isLiked ? 'false' : 'true';
+                likeCountElement.textContent = isLiked ? `${currentLikeCount + 1} likes` : `${currentLikeCount - 1} likes`;
 
                 fetch(url, {
                     method: 'POST',
@@ -40,9 +48,9 @@
                     if (data.error) {
                         console.error('Error:', data.error);
                     } else {
-                        document.querySelector(`#like-count-${tweetId}`).textContent = `${data.like_count} likes`;
                         this.textContent = data.status === 'liked' ? 'Unlike' : 'Like';
                         this.dataset.liked = data.status === 'liked' ? 'true' : 'false';
+                        likeCountElement.textContent = `${data.like_count} likes`
                     }
                 })
                 .catch(error => {
