@@ -33,16 +33,29 @@
 
         likeButtons.forEach(button => {
             button.addEventListener('click', function () {
+                // 複数回ボタンを押すことを回避するため、ボタンを無効化する
+                this.disabled = true;
+
                 const tweetId = this.dataset.tweetId;
+                console.log("tweetIdは")
+                console.log(tweetId)
                 const isLiked = this.dataset.liked === 'true';
+                console.log("likeされている状態ですか?")
+                console.log(isLiked)
                 const likeCountElement = document.querySelector(`#like-count-${tweetId}`);
                 const currentLikeCount = parseInt(likeCountElement.textContent);
                 const url = isLiked ? `/tweets/${tweetId}/unlike/` : `/tweets/${tweetId}/like/`;
+                console.log("urlは")
+                console.log(url)
 
                 // isLikedがtrue => これから、userがunlikeする
                 // isLikedがfalse => これから、userがlikeする
                 this.textContent = isLiked ? 'Unlike' : 'Like';
+                console.log("likedの場合、ボタンに表示されるテキストはUnlike,そうでない場合はLike")
+                console.log(this.textContent)
                 this.dataset.liked = isLiked ? 'false' : 'true';
+                console.log("現在likedステータスの場合,falseになるべき")
+                console.log(this.dataset.liked)
                 likeCountElement.textContent = isLiked ? `${currentLikeCount + 1} likes` : `${currentLikeCount - 1} likes`;
 
                 fetch(url, {
@@ -57,14 +70,20 @@
                     if (data.error) {
                         console.error('Error:', data.error);
                     } else {
+                        console.log("送るdataは")
+                        console.log(data)
                         this.textContent = data.status === 'liked' ? 'Unlike' : 'Like';
                         this.dataset.liked = data.status === 'liked' ? 'true' : 'false';
-                        likeCountElement.textContent = `${data.like_count} likes`
+                        likeCountElement.textContent = `${data.like_count} likes`;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                });
+                })
+                .finally(() => {
+                    // ボタンの無効化を解く
+                    this.disabled = false;
+                })
             });
         });
     });
