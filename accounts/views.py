@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
-from tweets.models import Tweet
+from tweets.models import Like, Tweet
 
 from .forms import SignupForm
 from .models import Follow, User
@@ -48,19 +48,17 @@ class UserProfileView(LoginRequiredMixin, DetailView):
     # contextを上書きする
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         profile_user = self.object
         # プロフィールユーザ特有のツイートをcontextに渡す
-        context["specific_user_tweet"] = (
+        context["specific_user_tweets"] = (
             Tweet.objects.filter(author=profile_user).select_related("author").prefetch_related("liked_tweet")
         )
         # フォロー済みであるか調べるためにcontextに渡す
         context["follow"] = Follow.objects.filter(follower=self.request.user, followed=profile_user).exists()
-
         # プロフィールユーザがフォローしている・されている数
         context["following_num"] = Follow.objects.filter(follower=profile_user).count()
         context["follower_num"] = Follow.objects.filter(followed=profile_user).count()
-
+        context["like_list"] = Like.objects.filter(user=self.request.user).values_list("tweet__pk", flat=True)
         return context
 
 

@@ -9,99 +9,14 @@
 <a href="{% url 'accounts:logout' %}">ログアウト</a>
 
 {% for tweet in tweets %}
-<div>
-    <a href="{% url 'accounts:user_profile' tweet.author.username %}">{{ tweet.author }}</a>
-    <div><a>{{ tweet.content }}</a></div>
-    <button class="like-btn" data-tweet-id="{{ tweet.pk }}" data-liked="{% if request.user in tweet.liked_tweet.all %}true{% else %}false{% endif %}">
-        {% if request.user in tweet.liked_tweet.all %}
-            Unlike
-        {% else %}
-            Like
-        {% endif %}
-    </button>
-    <span id="like-count-{{ tweet.pk }}">{{ tweet.liked_tweet.count }} likes</span>
     <div>
-        <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
-        <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
+        <ul>
+            <li><a href="{% url 'accounts:user_profile' tweet.author.username %}">{{ tweet.author }}</a></li>
+            <li><a>{{ tweet.content }}</a></li>
+            <li><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></li>
+            <li><a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a></li>
+            {% include "tweets/like.html" %}
+        </ul>
     </div>
-    <br>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const likeButtons = document.querySelectorAll(".like-btn");
-
-        likeButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                // 複数回ボタンを押すことを回避するため、ボタンを無効化する
-                this.disabled = true;
-
-                const tweetId = this.dataset.tweetId;
-                console.log("tweetIdは")
-                console.log(tweetId)
-                const isLiked = this.dataset.liked === 'true';
-                console.log("likeされている状態ですか?")
-                console.log(isLiked)
-                const likeCountElement = document.querySelector(`#like-count-${tweetId}`);
-                const currentLikeCount = parseInt(likeCountElement.textContent);
-                const url = isLiked ? `/tweets/${tweetId}/unlike/` : `/tweets/${tweetId}/like/`;
-                console.log("urlは")
-                console.log(url)
-
-                // isLikedがtrue => これから、userがunlikeする
-                // isLikedがfalse => これから、userがlikeする
-                this.textContent = isLiked ? 'Unlike' : 'Like';
-                console.log("likedの場合、ボタンに表示されるテキストはUnlike,そうでない場合はLike")
-                console.log(this.textContent)
-                this.dataset.liked = isLiked ? 'false' : 'true';
-                console.log("現在likedステータスの場合,falseになるべき")
-                console.log(this.dataset.liked)
-                likeCountElement.textContent = isLiked ? `${currentLikeCount + 1} likes` : `${currentLikeCount - 1} likes`;
-
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error('Error:', data.error);
-                    } else {
-                        console.log("送るdataは")
-                        console.log(data)
-                        this.textContent = data.status === 'liked' ? 'Unlike' : 'Like';
-                        this.dataset.liked = data.status === 'liked' ? 'true' : 'false';
-                        likeCountElement.textContent = `${data.like_count} likes`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                })
-                .finally(() => {
-                    // ボタンの無効化を解く
-                    this.disabled = false;
-                })
-            });
-        });
-    });
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-</script>
 {% endfor %}
 {% endblock %}
