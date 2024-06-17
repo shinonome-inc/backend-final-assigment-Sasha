@@ -63,7 +63,7 @@ class TestTweetCreateView(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("このフィールドは必須です。", form.errors["content"])
-        self.assertEqual(Tweet.objects.all().count(), 0)
+        self.assertFalse(Tweet.objects.all().exists())
 
     def test_failure_post_with_too_long_content(self):
 
@@ -79,7 +79,7 @@ class TestTweetCreateView(TestCase):
         self.assertIn(
             f"この値は 280 文字以下でなければなりません( {text_length} 文字になっています)。", form.errors["content"]
         )
-        self.assertEqual(Tweet.objects.all().count(), 0)
+        self.assertFalse(Tweet.objects.all().exists())
 
 
 class TestTweetDetailView(TestCase):
@@ -121,7 +121,7 @@ class TestTweetDeleteView(TestCase):
             target_status_code=200,
         )
 
-        self.assertEqual(Tweet.objects.all().count(), 0)
+        self.assertFalse(Tweet.objects.all().exists())
         self.assertFalse(Tweet.objects.filter(pk=self.tweet.pk))
 
     def test_failure_post_with_not_exist_tweet(self):
@@ -188,7 +188,7 @@ class TestUnLikeView(TestCase):
         response = self.client.post(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(Like.objects.all().count(), 0)  # DBから削除完了
+        self.assertFalse(Like.objects.all().exists())  # DBから削除完了
 
     def test_failure_post_with_not_exist_tweet(self):
         url = reverse("tweets:delete", kwargs={"pk": 999})  # 999 = 存在しないpk
