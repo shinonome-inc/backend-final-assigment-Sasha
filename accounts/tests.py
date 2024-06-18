@@ -323,7 +323,7 @@ class TestUserProfileView(TestCase):
         response = self.client.get(self.url)
 
         # context内のツイートとdb内のツイートを準備
-        context_tweets = response.context["specific_user_tweet"]
+        context_tweets = response.context["specific_user_tweets"]
         db_tweets = Tweet.objects.filter(author=self.user1)
 
         # context内のフォロー・フォロワー数(user1)

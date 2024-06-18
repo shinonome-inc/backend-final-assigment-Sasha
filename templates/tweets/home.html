@@ -9,14 +9,14 @@
 <a href="{% url 'accounts:logout' %}">ログアウト</a>
 
 {% for tweet in tweets %}
-<div>
-    <a href="{% url 'accounts:user_profile' tweet.author.username %}">{{ tweet.author }}</a>
-    <div><a>{{ tweet.content }}</a></div>
     <div>
-        <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
-        <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
+        <ul>
+            <li><a href="{% url 'accounts:user_profile' tweet.author.username %}">{{ tweet.author }}</a></li>
+            <li><a>{{ tweet.content }}</a></li>
+            <li><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></li>
+            <li><a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a></li>
+            {% include "tweets/like.html" %}
+        </ul>
     </div>
-    <br>
-</div>
 {% endfor %}
 {% endblock %}

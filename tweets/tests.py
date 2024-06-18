@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Tweet
+from .models import Like, Tweet
 
 User = get_user_model()
 
@@ -63,7 +63,7 @@ class TestTweetCreateView(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("このフィールドは必須です。", form.errors["content"])
-        self.assertEqual(Tweet.objects.all().count(), 0)
+        self.assertFalse(Tweet.objects.all().exists())
 
     def test_failure_post_with_too_long_content(self):
 
@@ -79,7 +79,7 @@ class TestTweetCreateView(TestCase):
         self.assertIn(
             f"この値は 280 文字以下でなければなりません( {text_length} 文字になっています)。", form.errors["content"]
         )
-        self.assertEqual(Tweet.objects.all().count(), 0)
+        self.assertFalse(Tweet.objects.all().exists())
 
 
 class TestTweetDetailView(TestCase):
@@ -121,7 +121,7 @@ class TestTweetDeleteView(TestCase):
             target_status_code=200,
         )
 
-        self.assertEqual(Tweet.objects.all().count(), 0)
+        self.assertFalse(Tweet.objects.all().exists())
         self.assertFalse(Tweet.objects.filter(pk=self.tweet.pk))
 
     def test_failure_post_with_not_exist_tweet(self):
@@ -145,18 +145,61 @@ class TestTweetDeleteView(TestCase):
         self.assertTrue(Tweet.objects.filter(pk=self.tweet.pk))
 
 
-# class TestLikeView(TestCase):
-#     def test_success_post(self):
+class TestLikeView(TestCase):
 
-#     def test_failure_post_with_not_exist_tweet(self):
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
+        self.client.login(username="testuser", password="testpassword")
+        self.tweet = Tweet.objects.create(content="This is a test tweet", author=self.user)
+        self.url = reverse("tweets:like", kwargs={"pk": self.tweet.pk})
 
-#     def test_failure_post_with_liked_tweet(self):
+    def test_success_post(self):
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Like.objects.filter(tweet=self.tweet, user=self.user))
+
+    def test_failure_post_with_not_exist_tweet(self):
+        url = reverse("tweets:like", kwargs={"pk": 999})  # 999 = 存在しないpk
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Like.objects.filter(tweet=self.tweet, user=self.user))
+
+    def test_failure_post_with_liked_tweet(self):
+        Like.objects.create(tweet=self.tweet, user=self.user)
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Like.objects.all().count(), 1)  # likeインスタンスの個数は1から増えない
 
 
-# class TestUnLikeView(TestCase):
+class TestUnLikeView(TestCase):
 
-#     def test_success_post(self):
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
+        self.client.login(username="testuser", password="testpassword")
+        self.tweet = Tweet.objects.create(content="This is a test tweet", author=self.user)
+        self.url = reverse("tweets:unlike", kwargs={"pk": self.tweet.pk})
+        Like.objects.create(tweet=self.tweet, user=self.user)
 
-#     def test_failure_post_with_not_exist_tweet(self):
+    def test_success_post(self):
+        response = self.client.post(self.url)
 
-#     def test_failure_post_with_unliked_tweet(self):
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Like.objects.all().exists())  # DBから削除完了
+
+    def test_failure_post_with_not_exist_tweet(self):
+        url = reverse("tweets:delete", kwargs={"pk": 999})  # 999 = 存在しないpk
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(Like.objects.all().count(), 1)  # DBから削除されていない
+
+    def test_failure_post_with_unliked_tweet(self):
+        Like.objects.get(tweet=self.tweet, user=self.user).delete()  # いいね取り消し
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, 200)

@@ -1,0 +1,52 @@
+{% if tweet.id in like_list %}
+    <button id="{{ tweet.id }}" onclick="toggleLike(id)" data-url="{% url 'tweets:unlike' tweet.id %}">Unlike</button>
+{% else %}
+    <button id="{{ tweet.id }}" onclick="toggleLike(id)" data-url="{% url 'tweets:like' tweet.id %}">Like</button>
+{% endif %}
+いいね数: <span id="like-count-{{ tweet.id }}">{{ tweet.liked_tweet.count }}</span>
+
+<script>
+    const getCookie = (name) => {
+        if (document.cookie && document.cookie !== '') {
+            for (const cookie of document.cookie.split(';')) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === name) {
+                    return decodeURIComponent(value);
+                }
+            }
+        }
+    };
+    const csrftoken = getCookie('csrftoken');
+
+    const toggleLike = async (id) => {
+
+        const likeButtonElement = document.getElementById(id);
+        const url = likeButtonElement.dataset.url;
+        const client_data = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+            },
+        }
+        const response = await fetch(url, client_data);
+        const server_data = await response.json()
+        change_ui(likeButtonElement, server_data)
+    }
+
+    const change_ui = (likeButtonElement, server_data) => {
+        console.log("server_dataの構造:", server_data)
+        const likeCountElement = document.querySelector("#like-count-" + server_data.tweet_id)
+        if (server_data.is_liked) {
+            unlike_url = server_data.unlike_url;
+            likeButtonElement.setAttribute("data-url", unlike_url);
+            likeButtonElement.innerHTML = "Unlike";
+            likeCountElement.textContent = server_data.like_count;
+        } else {
+            like_url = server_data.like_url;
+            likeButtonElement.setAttribute("data-url", like_url);
+            likeButtonElement.innerHTML = "Like";
+            likeCountElement.textContent = server_data.like_count;
+        }
+    }
+</script>

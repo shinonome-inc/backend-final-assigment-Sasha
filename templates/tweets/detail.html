@@ -3,10 +3,11 @@
 {% block title %}Tweet Detail{% endblock %}
 
 {% block content %}
-    <article>
-        <div>投稿者: {{ object.author }}</div>
-        <div>日時: {{ object.created_at }}</div>
-        <div>{{ object.content }}</div>
-        <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
-    </article>
+<ul>
+    <li>投稿者: {{ object.author }}</li>
+    <li>日時: {{ object.created_at }}</li>
+    <li>{{ object.content }}</li>
+    <a href="{% url 'tweets:delete' pk=object.pk %}">削除する</a>
+    {% include "tweets/like.html" %}
+</ul>
 {% endblock %}

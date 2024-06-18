@@ -31,12 +31,15 @@
     </tr>
 </table>
 
-{% for tweet in specific_user_tweet %}
+{% for tweet in specific_user_tweets %}
 <div>
     <h3>{{ tweet.author }}</h3>
     <p>{{ tweet.content }}</p>
-    <a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a>
-    <a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a>
 </div>
+<ul>
+    <li><a href="{% url 'tweets:detail' pk=tweet.pk %}">詳細を見る</a></li>
+    <li><a href="{% url 'tweets:delete' pk=tweet.pk %}">削除する</a></li>
+    {% include "tweets/like.html" %}
+</ul>
 {% endfor %}
 {% endblock %}
